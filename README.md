@@ -1,6 +1,6 @@
-# FourOscPro (JUCE VST3)
+# Pulze (JUCE VST3)
 
-`FourOscPro` is a 4-oscillator synth plugin scaffold built for your P2PDAW flow, ready to be pulled into the main Tracktion Engine project later.
+`Pulze` is a 4-oscillator synth plugin scaffold built for your P2PDAW flow, ready to be pulled into the main Tracktion Engine project later.
 
 ## Current DSP Features
 
