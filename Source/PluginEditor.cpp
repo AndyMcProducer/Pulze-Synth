@@ -87,7 +87,7 @@ void FourOscProAudioProcessorEditor::NeonLookAndFeel::drawToggleButton(
         }
 
         g.setColour(on ? juce::Colour::fromRGB(120, 238, 255) : kText.withAlpha(0.76f));
-        g.setFont(juce::FontOptions(12.0f, juce::Font::bold));
+        g.setFont(juce::Font(12.0f, juce::Font::bold));
         g.drawFittedText(text, button.getLocalBounds(), juce::Justification::centred, 1);
         return;
     }
@@ -98,7 +98,7 @@ void FourOscProAudioProcessorEditor::NeonLookAndFeel::drawToggleButton(
     g.setColour(button.getToggleState() ? kAccent : kAccentSoft.withAlpha(0.45f));
     g.drawRoundedRectangle(bounds, 6.0f, 1.4f);
     g.setColour(button.getToggleState() ? kAccent : kText.withAlpha(0.8f));
-    g.setFont(juce::FontOptions(13.0f, juce::Font::bold));
+    g.setFont(juce::Font(13.0f, juce::Font::bold));
     g.drawFittedText(button.getButtonText(), button.getLocalBounds(), juce::Justification::centred, 1);
 }
 
@@ -110,19 +110,19 @@ FourOscProAudioProcessorEditor::FourOscProAudioProcessorEditor(FourOscProAudioPr
     titleLabel.setText("PULZE", juce::dontSendNotification);
     titleLabel.setJustificationType(juce::Justification::centredLeft);
     titleLabel.setColour(juce::Label::textColourId, kAccent);
-    titleLabel.setFont(juce::FontOptions(30.0f, juce::Font::bold));
+    titleLabel.setFont(juce::Font(30.0f, juce::Font::bold));
     addAndMakeVisible(titleLabel);
 
     subtitleLabel.setText("Subtractive Synth", juce::dontSendNotification);
     subtitleLabel.setJustificationType(juce::Justification::centredLeft);
     subtitleLabel.setColour(juce::Label::textColourId, kText.withAlpha(0.85f));
-    subtitleLabel.setFont(juce::FontOptions(14.0f));
+    subtitleLabel.setFont(juce::Font(14.0f));
     addAndMakeVisible(subtitleLabel);
 
     presetLabel.setText("PRESET", juce::dontSendNotification);
     presetLabel.setJustificationType(juce::Justification::centredRight);
     presetLabel.setColour(juce::Label::textColourId, kText.withAlpha(0.85f));
-    presetLabel.setFont(juce::FontOptions(12.0f, juce::Font::bold));
+    presetLabel.setFont(juce::Font(12.0f, juce::Font::bold));
     addAndMakeVisible(presetLabel);
 
     presetBox.setButtonText("INIT - Init");
@@ -170,7 +170,7 @@ FourOscProAudioProcessorEditor::FourOscProAudioProcessorEditor(FourOscProAudioPr
 
     skinLabel.setText("SKIN", juce::dontSendNotification);
     skinLabel.setJustificationType(juce::Justification::centredRight);
-    skinLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+    skinLabel.setFont(juce::Font(11.0f, juce::Font::bold));
     addAndMakeVisible(skinLabel);
 
     styleCombo(skinBox);
@@ -183,7 +183,7 @@ FourOscProAudioProcessorEditor::FourOscProAudioProcessorEditor(FourOscProAudioPr
 
     glowLabel.setText("GLOW", juce::dontSendNotification);
     glowLabel.setJustificationType(juce::Justification::centredRight);
-    glowLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+    glowLabel.setFont(juce::Font(11.0f, juce::Font::bold));
     addAndMakeVisible(glowLabel);
 
     glowIntensitySlider.setSliderStyle(juce::Slider::LinearHorizontal);
@@ -211,7 +211,7 @@ FourOscProAudioProcessorEditor::FourOscProAudioProcessorEditor(FourOscProAudioPr
     for (auto* label : { &synthSectionLabel, &oscSectionLabel, &arpSectionLabel, &fxSectionLabel })
     {
         label->setColour(juce::Label::textColourId, kAccent.withAlpha(0.95f));
-        label->setFont(juce::FontOptions(14.0f, juce::Font::bold));
+        label->setFont(juce::Font(14.0f, juce::Font::bold));
         addAndMakeVisible(*label);
     }
 
@@ -240,7 +240,7 @@ FourOscProAudioProcessorEditor::FourOscProAudioProcessorEditor(FourOscProAudioPr
         l.setText(text, juce::dontSendNotification);
         l.setJustificationType(juce::Justification::centredLeft);
         l.setColour(juce::Label::textColourId, kText.withAlpha(0.86f));
-        l.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+        l.setFont(juce::Font(11.0f, juce::Font::bold));
         addAndMakeVisible(l);
     };
 
@@ -384,70 +384,70 @@ FourOscProAudioProcessorEditor::FourOscProAudioProcessorEditor(FourOscProAudioPr
         head.setText("OSC " + juce::String(i + 1), juce::dontSendNotification);
         head.setJustificationType(juce::Justification::centredLeft);
         head.setColour(juce::Label::textColourId, kAccent.withAlpha(0.95f));
-        head.setFont(juce::FontOptions(13.0f, juce::Font::bold));
+        head.setFont(juce::Font(13.0f, juce::Font::bold));
         addAndMakeVisible(head);
 
         auto& waveLabel = oscWaveLabels[static_cast<size_t>(i)];
         waveLabel.setText("WAVE", juce::dontSendNotification);
         waveLabel.setJustificationType(juce::Justification::centredLeft);
         waveLabel.setColour(juce::Label::textColourId, kText.withAlpha(0.86f));
-        waveLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+        waveLabel.setFont(juce::Font(11.0f, juce::Font::bold));
         addAndMakeVisible(waveLabel);
 
         auto& levelLabel = oscLevelLabels[static_cast<size_t>(i)];
         levelLabel.setText("LEVEL", juce::dontSendNotification);
         levelLabel.setJustificationType(juce::Justification::centredLeft);
         levelLabel.setColour(juce::Label::textColourId, kText.withAlpha(0.86f));
-        levelLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+        levelLabel.setFont(juce::Font(11.0f, juce::Font::bold));
         addAndMakeVisible(levelLabel);
 
         auto& octaveLabel = oscOctaveLabels[static_cast<size_t>(i)];
         octaveLabel.setText("OCT", juce::dontSendNotification);
         octaveLabel.setJustificationType(juce::Justification::centredLeft);
         octaveLabel.setColour(juce::Label::textColourId, kText.withAlpha(0.86f));
-        octaveLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+        octaveLabel.setFont(juce::Font(11.0f, juce::Font::bold));
         addAndMakeVisible(octaveLabel);
 
         auto& semitoneLabel = oscSemitoneLabels[static_cast<size_t>(i)];
         semitoneLabel.setText("SEMI", juce::dontSendNotification);
         semitoneLabel.setJustificationType(juce::Justification::centredLeft);
         semitoneLabel.setColour(juce::Label::textColourId, kText.withAlpha(0.86f));
-        semitoneLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+        semitoneLabel.setFont(juce::Font(11.0f, juce::Font::bold));
         addAndMakeVisible(semitoneLabel);
 
         auto& tuneLabel = oscTuneLabels[static_cast<size_t>(i)];
         tuneLabel.setText("TUNE", juce::dontSendNotification);
         tuneLabel.setJustificationType(juce::Justification::centredLeft);
         tuneLabel.setColour(juce::Label::textColourId, kText.withAlpha(0.86f));
-        tuneLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+        tuneLabel.setFont(juce::Font(11.0f, juce::Font::bold));
         addAndMakeVisible(tuneLabel);
 
         auto& panLabel = oscPanLabels[static_cast<size_t>(i)];
         panLabel.setText("PAN", juce::dontSendNotification);
         panLabel.setJustificationType(juce::Justification::centredLeft);
         panLabel.setColour(juce::Label::textColourId, kText.withAlpha(0.86f));
-        panLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+        panLabel.setFont(juce::Font(11.0f, juce::Font::bold));
         addAndMakeVisible(panLabel);
 
         auto& phaseLabel = oscPhaseLabels[static_cast<size_t>(i)];
         phaseLabel.setText("PHASE", juce::dontSendNotification);
         phaseLabel.setJustificationType(juce::Justification::centredLeft);
         phaseLabel.setColour(juce::Label::textColourId, kText.withAlpha(0.86f));
-        phaseLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+        phaseLabel.setFont(juce::Font(11.0f, juce::Font::bold));
         addAndMakeVisible(phaseLabel);
 
         auto& pitchEnvLabel = oscPitchEnvLabels[static_cast<size_t>(i)];
         pitchEnvLabel.setText("P ENV", juce::dontSendNotification);
         pitchEnvLabel.setJustificationType(juce::Justification::centredLeft);
         pitchEnvLabel.setColour(juce::Label::textColourId, kText.withAlpha(0.86f));
-        pitchEnvLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+        pitchEnvLabel.setFont(juce::Font(11.0f, juce::Font::bold));
         addAndMakeVisible(pitchEnvLabel);
 
         auto& pitchShapeLabel = oscPitchShapeLabels[static_cast<size_t>(i)];
         pitchShapeLabel.setText("P SHP", juce::dontSendNotification);
         pitchShapeLabel.setJustificationType(juce::Justification::centredLeft);
         pitchShapeLabel.setColour(juce::Label::textColourId, kText.withAlpha(0.86f));
-        pitchShapeLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+        pitchShapeLabel.setFont(juce::Font(11.0f, juce::Font::bold));
         addAndMakeVisible(pitchShapeLabel);
 
         auto& waveBox = oscWaveBoxes[static_cast<size_t>(i)];
@@ -678,7 +678,7 @@ void FourOscProAudioProcessorEditor::styleKnob(juce::Slider& slider, juce::Label
     label.setText(text, juce::dontSendNotification);
     label.setJustificationType(juce::Justification::centred);
     label.setColour(juce::Label::textColourId, kText.withAlpha(0.92f));
-    label.setFont(juce::FontOptions(12.0f, juce::Font::bold));
+    label.setFont(juce::Font(12.0f, juce::Font::bold));
     addAndMakeVisible(label);
 }
 
@@ -1966,7 +1966,7 @@ void FourOscProAudioProcessorEditor::paint(juce::Graphics& g)
     const auto meterInfo = getArpMeterBounds();
     juce::Rectangle<int> infoBounds(meterInfo.getX(), meterInfo.getBottom() + 2, meterInfo.getWidth(), 16);
     g.setColour(kText.withAlpha(0.82f + panelBreath * 0.16f));
-    g.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+    g.setFont(juce::Font(11.0f, juce::Font::bold));
     g.drawFittedText("ARP " + juce::String(active ? "SYNC" : "IDLE") + "  " + juce::String(modeText) + "  "
                         + juce::String(bpm, 1) + " BPM",
                      infoBounds.reduced(2, 0), juce::Justification::centredRight, 1);
@@ -2006,11 +2006,11 @@ void FourOscProAudioProcessorEditor::paint(juce::Graphics& g)
 
         auto textArea = panel.reduced(18);
         g.setColour(kAccent.withAlpha(0.96f * fade));
-        g.setFont(juce::FontOptions(20.0f, juce::Font::bold));
+        g.setFont(juce::Font(20.0f, juce::Font::bold));
         g.drawFittedText("INITIALIZING FOUROSC PRO", textArea.removeFromTop(32), juce::Justification::centred, 1);
 
         g.setColour(kText.withAlpha(0.8f * fade));
-        g.setFont(juce::FontOptions(13.0f));
+        g.setFont(juce::Font(13.0f));
         g.drawFittedText("DSP core, sync engine, neon interface...", textArea.removeFromTop(24), juce::Justification::centred, 1);
         textArea.removeFromTop(8);
 
