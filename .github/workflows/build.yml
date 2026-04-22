@@ -52,6 +52,16 @@ jobs:
           cpack -G ${{ runner.os == 'Windows' && 'NSIS' || 'productbuild' }}
         shell: bash
 
+      - name: Zip Plugins
+        run: |
+          cd build/Pulze_artefacts/Release
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            7z a ../../Pulze_Synth_Windows_VST3.zip ./VST3/Pulze.vst3
+          else
+            zip -r ../../Pulze_Synth_macOS_VST3_AU.zip ./VST3/Pulze.vst3 ./AU/Pulze.component
+          fi
+        shell: bash
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
