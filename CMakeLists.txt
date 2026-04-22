@@ -70,6 +70,7 @@ install(TARGETS Pulze
 
 # --- CPack Configuration ---
 set(CPACK_PACKAGE_NAME "Pulze Synth")
+set(CPACK_PACKAGE_FILE_NAME "Pulze-Setup")
 set(CPACK_PACKAGE_VENDOR "P2PDAW")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Pulze Synth - 4 Oscillator Synthesizer")
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
