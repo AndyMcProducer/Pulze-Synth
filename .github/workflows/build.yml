@@ -17,8 +17,10 @@ jobs:
         include:
           - os: windows-latest
             artifact: Pulze_Synth_Windows
+            formats: VST3
           - os: macos-latest
             artifact: Pulze_Synth_macOS
+            formats: VST3 AU
 
     steps:
       - name: Checkout code
@@ -26,50 +28,46 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          # No extra dependencies needed for basic JUCE usually, 
-          # but ASIO might be needed if you use it. 
-          # For a basic synth, default drivers are usually enough.
-          echo "Windows dependencies satisfied by runner"
-
-      - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          # No extra dependencies needed usually for Mac
-          echo "macOS dependencies satisfied by runner"
-
       - name: Configure CMake
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build --config Release --parallel 4
 
-      - name: Package with CPack
-        run: |
-          cd build
-          cpack -G ${{ runner.os == 'Windows' && 'NSIS' || 'productbuild' }}
+      - name: Zip Artifacts (Windows)
+        if: runner.os == 'Windows'
         shell: bash
-
-      - name: Zip Plugins
         run: |
           cd build/Pulze_artefacts/Release
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            7z a ../../Pulze_Synth_Windows_VST3.zip ./VST3/Pulze.vst3
-          else
-            zip -r ../../Pulze_Synth_macOS_VST3_AU.zip ./VST3/Pulze.vst3 ./AU/Pulze.component
-          fi
-        shell: bash
+          7z a ../../Pulze_Synth_Windows_VST3.zip ./VST3/Pulze.vst3
 
-      - name: Upload Artifacts
+      - name: Zip Artifacts (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          cd build/Pulze_artefacts/Release
+          zip -r ../../Pulze_Synth_macOS_VST3_AU.zip ./VST3/Pulze.vst3 ./AU/Pulze.component
+
+      - name: Upload Zip
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
+          name: ${{ matrix.artifact }}_Zip
+          path: build/*.zip
+
+      - name: Package with CPack
+        shell: bash
+        run: |
+          cd build
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            cpack -G NSIS
+          else
+            cpack -G DragNDrop
+          fi
+
+      - name: Upload Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}_Installer
           path: |
-            build/Pulze_artefacts/Release/VST3/Pulze.vst3
-            build/Pulze_artefacts/Release/AU/Pulze.component
             build/*.exe
-            build/*.pkg
             build/*.dmg
-            build/*.zip
