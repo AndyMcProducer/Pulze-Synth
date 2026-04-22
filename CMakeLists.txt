@@ -12,7 +12,7 @@ if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/JUCE/CMakeLists.txt")
     FetchContent_Declare(
         juce
         GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-        GIT_TAG 7.0.12 # Or a specific version you want
+        GIT_TAG 8.0.2 # Fixed for macOS 15.0 / Xcode 16
     )
     FetchContent_MakeAvailable(juce)
     set(JUCE_PATH ${juce_SOURCE_DIR})
