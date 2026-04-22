@@ -1,0 +1,65 @@
+name: Build Pulze Synth
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: Pulze_Synth_Windows
+          - os: macos-latest
+            artifact: Pulze_Synth_macOS
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # No extra dependencies needed for basic JUCE usually, 
+          # but ASIO might be needed if you use it. 
+          # For a basic synth, default drivers are usually enough.
+          echo "Windows dependencies satisfied by runner"
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          # No extra dependencies needed usually for Mac
+          echo "macOS dependencies satisfied by runner"
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel 4
+
+      - name: Package with CPack
+        run: |
+          cd build
+          cpack -G ${{ runner.os == 'Windows' && 'NSIS' || 'productbuild' }}
+        shell: bash
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            build/Pulze_artefacts/Release/VST3/Pulze.vst3
+            build/Pulze_artefacts/Release/AU/Pulze.component
+            build/*.exe
+            build/*.pkg
+            build/*.dmg
+            build/*.zip

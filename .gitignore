@@ -1,0 +1,17 @@
+/build/
+/.vs/
+/out/
+/x64/
+/Win32/
+*.user
+*.suo
+*.userOSSC
+*.sln
+*.vcxproj
+*.filters
+*.ipch
+*.aps
+*.log
+*.bak
+.DS_Store
+JUCE/
