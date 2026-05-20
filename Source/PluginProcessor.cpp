@@ -64,6 +64,7 @@ static constexpr auto subAmount = "subAmount";
 static constexpr auto subFrequencyHz = "subFrequencyHz";
 } // namespace ParamIDs
 
+static juce::String oscEnabledId(int index)    { return "osc" + juce::String(index + 1) + "Enabled"; }
 static juce::String oscLevelId(int index)      { return "osc" + juce::String(index + 1) + "Level"; }
 static juce::String oscTuneCentsId(int index)  { return "osc" + juce::String(index + 1) + "TuneCents"; }
 static juce::String oscOctaveId(int index)     { return "osc" + juce::String(index + 1) + "Octave"; }
@@ -310,6 +311,9 @@ public:
 
                 for (int osc = 0; osc < kOscCount; ++osc)
                 {
+                    if (params.oscEnabled[osc]->load() < 0.5f)
+                        continue;
+
                     updateDrift(osc, lane);
 
                     const auto wave = static_cast<int>(params.oscWave[osc]->load());
@@ -754,6 +758,7 @@ FourOscProAudioProcessor::FourOscProAudioProcessor()
 
     for (int i = 0; i < kOscCount; ++i)
     {
+        parameterRefs->oscEnabled[i] = getRaw(oscEnabledId(i));
         parameterRefs->oscLevel[i] = getRaw(oscLevelId(i));
         parameterRefs->oscTuneCents[i] = getRaw(oscTuneCentsId(i));
         parameterRefs->oscOctave[i] = getRaw(oscOctaveId(i));
@@ -877,6 +882,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout FourOscProAudioProcessor::cr
     for (int i = 0; i < kOscCount; ++i)
     {
         const auto idx = juce::String(i + 1);
+        layout.add(std::make_unique<juce::AudioParameterBool>(oscEnabledId(i), "Osc " + idx + " Enabled", true));
         layout.add(std::make_unique<juce::AudioParameterFloat>(oscLevelId(i), "Osc " + idx + " Level",
                                                                 juce::NormalisableRange<float>(0.0f, 1.0f, 0.0001f), 0.25f));
         layout.add(std::make_unique<juce::AudioParameterChoice>(oscOctaveId(i), "Osc " + idx + " Octave",

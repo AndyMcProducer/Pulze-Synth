@@ -52,6 +52,7 @@ struct FourOscParameterRefs
     std::atomic<float>* arpOctaves = nullptr;
     std::atomic<float>* subAmount = nullptr;
     std::atomic<float>* subFrequencyHz = nullptr;
+    std::array<std::atomic<float>*, 4> oscEnabled {};
     std::array<std::atomic<float>*, 4> oscLevel {};
     std::array<std::atomic<float>*, 4> oscTuneCents {};
     std::array<std::atomic<float>*, 4> oscOctave {};

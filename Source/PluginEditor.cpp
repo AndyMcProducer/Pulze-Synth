@@ -269,12 +269,25 @@ FourOscProAudioProcessorEditor::FourOscProAudioProcessorEditor(FourOscProAudioPr
     styleSmall(postSatSlider, postSatLabel, "POST SAT");
     styleSmall(limiterThresholdSlider, limiterThresholdLabel, "LIM THR");
 
+    for (auto* s : { &chorusRateSlider, &chorusDepthSlider, &chorusMixSlider,
+                     &delayTimeSlider, &delayFeedbackSlider, &reverbSizeSlider,
+                     &reverbDampingSlider, &postSatSlider, &limiterThresholdSlider })
+    {
+        s->setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+        s->setPopupDisplayEnabled(true, true, this);
+    }
+
     styleToggle(arpEnabledButton, "ARP ON");
     styleToggle(arpLatchButton, "LATCH");
     styleToggle(retriggerButton, "RETRIGGER");
     styleToggle(delaySyncButton, "DELAY SYNC");
     styleToggle(chorusSyncButton, "CHORUS SYNC");
     styleToggle(limiterOnButton, "LIMITER");
+
+    auto syncOscEnabledButtonText = [] (juce::ToggleButton& button)
+    {
+        button.setButtonText(button.getToggleState() ? "ON" : "OFF");
+    };
 
     styleCombo(unisonVoicesBox);
     styleCombo(arpDivisionBox);
@@ -346,6 +359,8 @@ FourOscProAudioProcessorEditor::FourOscProAudioProcessorEditor(FourOscProAudioPr
     for (int i = 0; i < 4; ++i)
     {
         const auto idx = juce::String(i + 1);
+        oscEnabledAttachments[static_cast<size_t>(i)] = std::make_unique<ButtonAttachment>(state, "osc" + idx + "Enabled",
+                                                                                            oscEnabledButtons[static_cast<size_t>(i)]);
         oscWaveAttachments[static_cast<size_t>(i)] = std::make_unique<ComboAttachment>(state, "osc" + idx + "Wave",
                                                                                         oscWaveBoxes[static_cast<size_t>(i)]);
         oscOctaveAttachments[static_cast<size_t>(i)] = std::make_unique<ComboAttachment>(state, "osc" + idx + "Octave",
@@ -386,6 +401,17 @@ FourOscProAudioProcessorEditor::FourOscProAudioProcessorEditor(FourOscProAudioPr
         head.setColour(juce::Label::textColourId, kAccent.withAlpha(0.95f));
         head.setFont(juce::Font(13.0f, juce::Font::bold));
         addAndMakeVisible(head);
+
+        auto& enabledButton = oscEnabledButtons[static_cast<size_t>(i)];
+        styleToggle(enabledButton, "ON");
+        enabledButton.setTooltip("Toggle OSC " + juce::String(i + 1));
+        enabledButton.onStateChange = [this, &enabledButton, syncOscEnabledButtonText, oscIndex = i]
+        {
+            syncOscEnabledButtonText(enabledButton);
+            updateOscillatorEnabledState(oscIndex);
+        };
+        syncOscEnabledButtonText(enabledButton);
+        updateOscillatorEnabledState(i);
 
         auto& waveLabel = oscWaveLabels[static_cast<size_t>(i)];
         waveLabel.setText("WAVE", juce::dontSendNotification);
@@ -769,6 +795,8 @@ void FourOscProAudioProcessorEditor::applySkin(int skinIndex)
     }
 
     processor.getValueTreeState().state.setProperty(kUiSkinIndexStateKey, skinIndex, nullptr);
+    for (int i = 0; i < 4; ++i)
+        updateOscillatorEnabledState(i);
     repaint();
 }
 
@@ -1115,7 +1143,42 @@ bool FourOscProAudioProcessorEditor::loadUserPresetFromFile(const juce::File& pr
     currentPresetIndex = 0;
     presetBox.setButtonText("USER - " + presetFile.getFileNameWithoutExtension());
     processor.getValueTreeState().state.setProperty(kUiPresetIndexStateKey, 0, nullptr);
+    for (int i = 0; i < 4; ++i)
+        updateOscillatorEnabledState(i);
     return true;
+}
+
+void FourOscProAudioProcessorEditor::updateOscillatorEnabledState(int oscIndex)
+{
+    if (! juce::isPositiveAndBelow(oscIndex, 4))
+        return;
+
+    const auto idx = static_cast<size_t>(oscIndex);
+    const bool enabled = oscEnabledButtons[idx].getToggleState();
+    const float controlAlpha = enabled ? 1.0f : 0.38f;
+    const auto headColour = (enabled ? kAccent : kAccentSoft).withAlpha(enabled ? 1.0f : 0.58f);
+    const auto labelColour = kText.withAlpha(enabled ? 0.86f : 0.34f);
+
+    oscHeadLabels[idx].setColour(juce::Label::textColourId, headColour);
+    oscHeadLabels[idx].setAlpha(enabled ? 1.0f : 0.75f);
+
+    for (auto* label : { &oscWaveLabels[idx], &oscOctaveLabels[idx], &oscSemitoneLabels[idx], &oscLevelLabels[idx],
+                         &oscTuneLabels[idx], &oscPanLabels[idx], &oscPhaseLabels[idx], &oscPitchEnvLabels[idx],
+                         &oscPitchShapeLabels[idx] })
+    {
+        label->setColour(juce::Label::textColourId, labelColour);
+        label->setAlpha(controlAlpha);
+    }
+
+    for (auto* component : { static_cast<juce::Component*>(&oscWaveBoxes[idx]), static_cast<juce::Component*>(&oscOctaveBoxes[idx]),
+                             static_cast<juce::Component*>(&oscPitchShapeBoxes[idx]), static_cast<juce::Component*>(&oscLevelSliders[idx]),
+                             static_cast<juce::Component*>(&oscSemitoneSliders[idx]), static_cast<juce::Component*>(&oscTuneSliders[idx]),
+                             static_cast<juce::Component*>(&oscPanSliders[idx]), static_cast<juce::Component*>(&oscPhaseSliders[idx]),
+                             static_cast<juce::Component*>(&oscPitchEnvSliders[idx]) })
+    {
+        component->setEnabled(enabled);
+        component->setAlpha(controlAlpha);
+    }
 }
 
 void FourOscProAudioProcessorEditor::updateOscTabVisibility()
@@ -1124,6 +1187,7 @@ void FourOscProAudioProcessorEditor::updateOscTabVisibility()
     {
         oscTabButtons[static_cast<size_t>(i)].setVisible(false);
         oscHeadLabels[static_cast<size_t>(i)].setVisible(true);
+        oscEnabledButtons[static_cast<size_t>(i)].setVisible(true);
         oscWaveLabels[static_cast<size_t>(i)].setVisible(true);
         oscOctaveLabels[static_cast<size_t>(i)].setVisible(true);
         oscSemitoneLabels[static_cast<size_t>(i)].setVisible(true);
@@ -1142,9 +1206,7 @@ void FourOscProAudioProcessorEditor::updateOscTabVisibility()
         oscPanSliders[static_cast<size_t>(i)].setVisible(true);
         oscPhaseSliders[static_cast<size_t>(i)].setVisible(true);
         oscPitchEnvSliders[static_cast<size_t>(i)].setVisible(true);
-
-        const auto headColour = kAccent.withAlpha(1.0f);
-        oscHeadLabels[static_cast<size_t>(i)].setColour(juce::Label::textColourId, headColour);
+        updateOscillatorEnabledState(i);
     }
 
     oscTabButtons[4].setVisible(false);
@@ -1216,18 +1278,24 @@ void FourOscProAudioProcessorEditor::applyFactoryPreset(int presetIndex)
 
     // Always start from a known base.
     setParam("masterGain", -3.0f);
+    setParam("retrigger", 0.0f);
+    setParam("drift", 0.8f);
     setParam("drive", 6.0f);
     setParam("cutoff", 8000.0f);
     setParam("resonance", 0.35f);
     setParam("madnezz", 0.0f);
     setParam("bassCompAmount", 0.6f);
     setParam("analogWarm", 0.35f);
+    setParam("attackMs", 8.0f);
+    setParam("decayMs", 180.0f);
+    setParam("sustain", 0.7f);
+    setParam("releaseMs", 280.0f);
     setParam("unisonVoices", 0.0f);
     setParam("unisonDetune", 8.0f);
     setParam("stereoSpread", 0.75f);
     setParam("monoWidth", 1.0f);
-    setParam("vibratoDepthCents", 8.0f);
-    setParam("vibratoRateHz", 5.2f);
+    setParam("vibratoDepthCents", 2.0f);
+    setParam("vibratoRateHz", 4.6f);
     setParam("pitchEnvTimeMs", 220.0f);
     setParam("panSweepAmount", 0.0f);
     setParam("panSweepRateHz", 0.35f);
@@ -1235,7 +1303,7 @@ void FourOscProAudioProcessorEditor::applyFactoryPreset(int presetIndex)
     setParam("chorusSyncDivision", 2.0f);
     setParam("chorusRate", 0.35f);
     setParam("chorusDepth", 0.35f);
-    setParam("chorusMix", 0.2f);
+    setParam("chorusMix", 0.0f);
     setParam("phaserMix", 0.0f);
     setParam("fxSpace", 0.45f);
     setParam("delaySync", 1.0f);
@@ -1256,6 +1324,7 @@ void FourOscProAudioProcessorEditor::applyFactoryPreset(int presetIndex)
     setParam("arpGate", 0.58f);
     setParam("subAmount", 0.0f);
     setParam("subFrequencyHz", 60.0f);
+    setParam("osc1Enabled", 1.0f); setParam("osc2Enabled", 1.0f); setParam("osc3Enabled", 1.0f); setParam("osc4Enabled", 1.0f);
     setParam("osc1Wave", 1.0f); setParam("osc2Wave", 1.0f); setParam("osc3Wave", 1.0f); setParam("osc4Wave", 1.0f);
     setParam("osc1Octave", 2.0f); setParam("osc2Octave", 2.0f); setParam("osc3Octave", 2.0f); setParam("osc4Octave", 2.0f);
     setParam("osc1Level", 0.25f); setParam("osc2Level", 0.25f); setParam("osc3Level", 0.25f); setParam("osc4Level", 0.25f);
@@ -1382,12 +1451,21 @@ void FourOscProAudioProcessorEditor::applyFactoryPreset(int presetIndex)
                 setParam("osc3Level", randRange(0.0f, 0.12f)); setParam("osc4Level", randRange(0.0f, 0.08f));
                 break;
             case 1: // KEYS
+                setParam("drift", 0.15f + 0.45f * t2);
+                setParam("analogWarm", 0.12f + 0.18f * t2);
+                setParam("vibratoDepthCents", 0.2f + 0.9f * t);
+                setParam("vibratoRateHz", 3.6f + 0.9f * t2);
+                setParam("osc1Octave", 2.0f); setParam("osc2Octave", 2.0f); setParam("osc3Octave", 2.0f); setParam("osc4Octave", 2.0f);
+                setParam("osc1Semitone", 0.0f); setParam("osc2Semitone", 0.0f); setParam("osc3Semitone", 0.0f); setParam("osc4Semitone", 0.0f);
+                setParam("osc1TuneCents", 0.0f); setParam("osc2TuneCents", 0.0f);
+                setParam("osc3TuneCents", 0.0f); setParam("osc4TuneCents", 0.0f);
+                setParam("osc1Level", 0.28f); setParam("osc2Level", 0.24f); setParam("osc3Level", 0.10f + 0.08f * t); setParam("osc4Level", 0.10f);
                 setParam("attackMs", 2.0f + 60.0f * t);
                 setParam("decayMs", 160.0f + 620.0f * t2);
                 setParam("sustain", 0.35f + 0.4f * t);
                 setParam("releaseMs", 130.0f + 520.0f * t2);
                 setParam("cutoff", 2600.0f + 3800.0f * t);
-                setParam("chorusMix", 0.15f + 0.35f * t2);
+                setParam("chorusMix", 0.04f + 0.12f * t2);
                 setParam("delayMix", 0.08f + 0.2f * t);
                 setParam("reverbMix", 0.14f + 0.28f * t2);
                 setParam("monoWidth", 0.8f + 0.2f * t);
@@ -1405,12 +1483,21 @@ void FourOscProAudioProcessorEditor::applyFactoryPreset(int presetIndex)
                 setParam("analogWarm", 0.3f + 0.5f * t);
                 break;
             case 3: // LEAD
+                setParam("drift", 0.3f + 0.6f * t2);
+                setParam("analogWarm", 0.18f + 0.16f * t3);
+                setParam("vibratoDepthCents", 0.4f + 1.8f * t);
+                setParam("vibratoRateHz", 4.0f + 1.0f * t2);
                 setParam("attackMs", 1.0f + 30.0f * t);
                 setParam("decayMs", 140.0f + 320.0f * t2);
                 setParam("sustain", 0.55f + 0.2f * t);
                 setParam("releaseMs", 90.0f + 260.0f * t2);
-                setParam("unisonVoices", 2.0f + (t > 0.6f ? 1.0f : 0.0f));
-                setParam("unisonDetune", 12.0f + 9.0f * t);
+                setParam("unisonVoices", (t > 0.8f) ? 1.0f : 0.0f);
+                setParam("unisonDetune", 2.0f + 1.5f * t);
+                setParam("osc1Octave", 2.0f); setParam("osc2Octave", 2.0f); setParam("osc3Octave", 2.0f); setParam("osc4Octave", 2.0f);
+                setParam("osc1Semitone", 0.0f); setParam("osc2Semitone", 0.0f); setParam("osc3Semitone", 0.0f); setParam("osc4Semitone", 0.0f);
+                setParam("osc1TuneCents", 0.0f); setParam("osc2TuneCents", 0.0f);
+                setParam("osc3TuneCents", 0.0f); setParam("osc4TuneCents", 0.0f);
+                setParam("osc1Level", 0.30f); setParam("osc2Level", 0.26f); setParam("osc3Level", 0.14f + 0.06f * t); setParam("osc4Level", 0.12f);
                 setParam("drive", 7.0f + 6.0f * t2);
                 setParam("cutoff", 2800.0f + 5200.0f * t);
                 setParam("postSaturation", 0.15f + 0.25f * t2);
@@ -1535,24 +1622,29 @@ void FourOscProAudioProcessorEditor::applyFactoryPreset(int presetIndex)
         case 9: // KEYS - Chiptune Keys
             setParam("osc1Wave", 2.0f); setParam("osc2Wave", 2.0f); setParam("osc3Wave", 2.0f); setParam("osc4Wave", 0.0f);
             setParam("attackMs", 1.0f); setParam("decayMs", 110.0f); setParam("sustain", 0.42f); setParam("releaseMs", 80.0f);
+            setParam("drift", 0.1f); setParam("analogWarm", 0.08f); setParam("vibratoDepthCents", 0.0f);
             setParam("monoWidth", 0.15f);
             break;
         case 10: // KEYS - Wide Chorus Keys
-            setParam("chorusSync", 0.0f); setParam("chorusRate", 0.85f); setParam("chorusDepth", 0.5f); setParam("chorusMix", 0.48f);
+            setParam("chorusSync", 0.0f); setParam("chorusRate", 0.65f); setParam("chorusDepth", 0.24f); setParam("chorusMix", 0.18f);
+            setParam("drift", 0.35f); setParam("analogWarm", 0.18f); setParam("vibratoDepthCents", 0.6f); setParam("vibratoRateHz", 4.2f);
             setParam("stereoSpread", 0.95f); setParam("monoWidth", 1.0f); setParam("delayMix", 0.14f); setParam("reverbMix", 0.24f);
             break;
         case 11: // KEYS - Glass Keys
             setParam("osc1Wave", 0.0f); setParam("osc2Wave", 3.0f); setParam("osc3Wave", 0.0f); setParam("osc4Wave", 3.0f);
             setParam("attackMs", 6.0f); setParam("decayMs", 900.0f); setParam("sustain", 0.2f); setParam("releaseMs", 520.0f);
+            setParam("drift", 0.2f); setParam("analogWarm", 0.12f); setParam("vibratoDepthCents", 0.2f); setParam("vibratoRateHz", 3.9f);
             setParam("delayMix", 0.24f); setParam("reverbMix", 0.36f);
             break;
         case 12: // KEYS - Electric Pluck Keys
             setParam("attackMs", 1.0f); setParam("decayMs", 300.0f); setParam("sustain", 0.32f); setParam("releaseMs", 180.0f);
-            setParam("cutoff", 4100.0f); setParam("resonance", 0.62f); setParam("chorusMix", 0.2f);
+            setParam("drift", 0.3f); setParam("analogWarm", 0.16f); setParam("vibratoDepthCents", 0.5f); setParam("vibratoRateHz", 4.0f);
+            setParam("cutoff", 4100.0f); setParam("resonance", 0.62f); setParam("chorusMix", 0.08f);
             break;
         case 13: // KEYS - Hollow Metallic
             setParam("osc1Wave", 3.0f); setParam("osc2Wave", 2.0f); setParam("osc3Wave", 3.0f); setParam("osc4Level", 0.15f);
             setParam("attackMs", 3.0f); setParam("decayMs", 700.0f); setParam("sustain", 0.28f); setParam("releaseMs", 420.0f);
+            setParam("drift", 0.25f); setParam("analogWarm", 0.14f); setParam("vibratoDepthCents", 0.3f); setParam("vibratoRateHz", 4.0f);
             setParam("reverbMix", 0.32f); setParam("delayMix", 0.16f);
             break;
         case 14: // PAD - Space Pad
@@ -1584,21 +1676,25 @@ void FourOscProAudioProcessorEditor::applyFactoryPreset(int presetIndex)
             setParam("chorusMix", 0.26f); setParam("reverbMix", 0.3f);
             break;
         case 19: // LEAD - SuperSaw Lead
-            setParam("unisonVoices", 3.0f); setParam("unisonDetune", 19.0f); setParam("stereoSpread", 1.0f);
+            setParam("unisonVoices", 2.0f); setParam("unisonDetune", 4.5f); setParam("stereoSpread", 0.9f);
             setParam("osc1Wave", 1.0f); setParam("osc2Wave", 1.0f); setParam("osc3Wave", 1.0f); setParam("osc4Wave", 1.0f);
             setParam("attackMs", 8.0f); setParam("decayMs", 260.0f); setParam("sustain", 0.66f);
-            setParam("chorusMix", 0.33f); setParam("postSaturation", 0.26f);
+            setParam("drift", 0.45f); setParam("analogWarm", 0.18f); setParam("vibratoDepthCents", 0.8f); setParam("vibratoRateHz", 4.1f);
+            setParam("chorusMix", 0.14f); setParam("postSaturation", 0.26f);
             break;
         case 20: // LEAD - Laser Mono
             setParam("monoWidth", 0.0f); setParam("drive", 11.0f); setParam("cutoff", 4600.0f); setParam("resonance", 0.78f);
             setParam("attackMs", 1.0f); setParam("decayMs", 150.0f); setParam("sustain", 0.58f); setParam("releaseMs", 120.0f);
+            setParam("drift", 0.15f); setParam("analogWarm", 0.12f); setParam("vibratoDepthCents", 0.0f);
             break;
         case 21: // LEAD - Soft Lead
             setParam("attackMs", 40.0f); setParam("decayMs", 260.0f); setParam("sustain", 0.72f); setParam("releaseMs", 300.0f);
-            setParam("chorusMix", 0.22f); setParam("delayMix", 0.12f); setParam("reverbMix", 0.18f);
+            setParam("drift", 0.3f); setParam("analogWarm", 0.16f); setParam("vibratoDepthCents", 0.6f); setParam("vibratoRateHz", 4.0f);
+            setParam("chorusMix", 0.08f); setParam("delayMix", 0.12f); setParam("reverbMix", 0.18f);
             break;
         case 22: // LEAD - Bright Sync
             setParam("osc1Wave", 1.0f); setParam("osc2Wave", 2.0f); setParam("osc2Semitone", 12.0f);
+            setParam("drift", 0.2f); setParam("analogWarm", 0.14f); setParam("vibratoDepthCents", 0.2f); setParam("vibratoRateHz", 4.2f);
             setParam("cutoff", 6800.0f); setParam("resonance", 0.52f); setParam("drive", 9.5f);
             setParam("postSaturation", 0.22f);
             break;
@@ -2140,6 +2236,17 @@ void FourOscProAudioProcessorEditor::resized()
         l3.setBounds(c3.removeFromLeft(86)); s3.setBounds(c3);
     };
 
+    auto layoutCompactFxRow = [] (juce::Rectangle<int> row, juce::Label& l1, juce::Slider& s1,
+                                  juce::Label& l2, juce::Slider& s2, juce::Label& l3, juce::Slider& s3)
+    {
+        auto c1 = row.removeFromLeft(row.getWidth() / 3).reduced(2, 0);
+        auto c2 = row.removeFromLeft(row.getWidth() / 2).reduced(2, 0);
+        auto c3 = row.reduced(2, 0);
+        l1.setBounds(c1.removeFromLeft(56)); s1.setBounds(c1);
+        l2.setBounds(c2.removeFromLeft(58)); s2.setBounds(c2);
+        l3.setBounds(c3.removeFromLeft(56)); s3.setBounds(c3);
+    };
+
     auto rowA = synthArea.removeFromTop(20);
     layoutSmallRow(rowA, driftLabel, driftSlider, analogWarmLabel, analogWarmSlider, bassCompLabel, bassCompSlider);
     synthArea.removeFromTop(2);
@@ -2221,20 +2328,13 @@ void FourOscProAudioProcessorEditor::resized()
 
     fxArea.removeFromTop(4);
     auto fxRow1 = fxArea.removeFromTop(22);
-    layoutSmallRow(fxRow1, chorusRateLabel, chorusRateSlider, chorusDepthLabel, chorusDepthSlider, chorusMixLabel, chorusMixSlider);
+    layoutCompactFxRow(fxRow1, chorusRateLabel, chorusRateSlider, chorusDepthLabel, chorusDepthSlider, chorusMixLabel, chorusMixSlider);
     fxArea.removeFromTop(2);
     auto fxRow2 = fxArea.removeFromTop(22);
-    layoutSmallRow(fxRow2, delayTimeLabel, delayTimeSlider, delayFeedbackLabel, delayFeedbackSlider, reverbSizeLabel, reverbSizeSlider);
+    layoutCompactFxRow(fxRow2, delayTimeLabel, delayTimeSlider, delayFeedbackLabel, delayFeedbackSlider, reverbSizeLabel, reverbSizeSlider);
     fxArea.removeFromTop(2);
     auto fxRow3 = fxArea.removeFromTop(22);
-    reverbDampingLabel.setBounds(fxRow3.removeFromLeft(94));
-    reverbDampingSlider.setBounds(fxRow3.removeFromLeft(230));
-    fxRow3.removeFromLeft(8);
-    postSatLabel.setBounds(fxRow3.removeFromLeft(84));
-    postSatSlider.setBounds(fxRow3.removeFromLeft(180));
-    fxRow3.removeFromLeft(8);
-    limiterThresholdLabel.setBounds(fxRow3.removeFromLeft(76));
-    limiterThresholdSlider.setBounds(fxRow3.removeFromLeft(180));
+    layoutCompactFxRow(fxRow3, reverbDampingLabel, reverbDampingSlider, postSatLabel, postSatSlider, limiterThresholdLabel, limiterThresholdSlider);
 
     // Bottom oscillator bank (all 4 oscillators on one page).
     auto oscTitle = oscArea.removeFromTop(20);
@@ -2242,8 +2342,12 @@ void FourOscProAudioProcessorEditor::resized()
     oscArea.removeFromTop(2);
     for (int i = 0; i < 4; ++i)
     {
-        auto row = oscArea.removeFromTop(58).reduced(2, 1);
-        oscHeadLabels[static_cast<size_t>(i)].setBounds(row.removeFromTop(16));
+        auto row = oscArea.removeFromTop(62).reduced(2, 1);
+        auto headRow = row.removeFromTop(20);
+        auto headCluster = headRow.removeFromLeft(146);
+        oscHeadLabels[static_cast<size_t>(i)].setBounds(headCluster.removeFromLeft(82));
+        headCluster.removeFromLeft(6);
+        oscEnabledButtons[static_cast<size_t>(i)].setBounds(headCluster.removeFromLeft(58));
         row.removeFromTop(2);
 
         auto line1 = row.removeFromTop(20);

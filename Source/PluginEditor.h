@@ -35,6 +35,7 @@ private:
     void styleKnob(juce::Slider& slider, juce::Label& label, const juce::String& text);
     void styleToggle(juce::ToggleButton& button, const juce::String& text);
     void styleCombo(juce::ComboBox& box);
+    void updateOscillatorEnabledState(int oscIndex);
     void updateOscTabVisibility();
     void applyFactoryPreset(int presetIndex);
     void buildPresetList();
@@ -188,6 +189,7 @@ private:
     juce::ToggleButton delaySyncButton;
     juce::ToggleButton chorusSyncButton;
     juce::ToggleButton limiterOnButton;
+    std::array<juce::ToggleButton, 4> oscEnabledButtons;
     std::array<juce::ToggleButton, 5> oscTabButtons;
     int selectedOscTab = 4;
 
@@ -255,6 +257,7 @@ private:
     std::unique_ptr<ButtonAttachment> delaySyncAttachment;
     std::unique_ptr<ButtonAttachment> chorusSyncAttachment;
     std::unique_ptr<ButtonAttachment> limiterOnAttachment;
+    std::array<std::unique_ptr<ButtonAttachment>, 4> oscEnabledAttachments;
 
     std::unique_ptr<ComboAttachment> unisonVoicesAttachment;
     std::unique_ptr<ComboAttachment> arpDivisionAttachment;
